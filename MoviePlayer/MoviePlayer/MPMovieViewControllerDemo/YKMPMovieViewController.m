@@ -9,7 +9,7 @@
 #import "YKMPMovieViewController.h"
 #import <MediaPlayer/MediaPlayer.h>
 @interface YKMPMovieViewController ()
-@property(nonatomic,strong)MPMoviePlayerViewController * player;
+@property(nonatomic,strong)MPMoviePlayerViewController * playerVC;
 
 @end
 
@@ -18,15 +18,17 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
-    self.title = @"播放器";
+    
 }
+
 
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
     //清空界面
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    self.player = nil;
+    self.playerVC = nil;
+    
 }
 //注意： 此方法iOS9.0 已经弃用 在Xcode8 及以上会在底部一直打输出，查阅大量资料无法去除,不建议使用
 - (IBAction)playMovieAction:(id)sender
@@ -34,15 +36,23 @@
     //设置资源文件路径 //可以播放网络资源，
     NSString *filePath = [[NSBundle mainBundle] pathForResource:@"minion_01.mp4" ofType:nil];
     NSURL *url = [NSURL fileURLWithPath:filePath];
-    
     // 添加播放器
     MPMoviePlayerViewController *VC = [[MPMoviePlayerViewController alloc] initWithContentURL:url];
     [self.navigationController presentViewController:VC animated:YES completion:nil];
     //添加全局属性
-    self.player = VC;
+    self.playerVC = VC;
+
+    [self addNotification];
+    
+}
+
+- (void)addNotification
+{
     //添加通知监听播放器的动作
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(movieDidChangeAction) name:MPMoviePlayerPlaybackStateDidChangeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(movieDidFinishAction) name:MPMoviePlayerPlaybackDidFinishNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadStateDidChangeAction) name:MPMoviePlayerLoadStateDidChangeNotification object:nil];
 }
 
 #pragma mark - 监听通知方法
@@ -51,7 +61,7 @@
 {
     NSLog(@"播放器事件改变");
     
-    switch (self.player.moviePlayer.playbackState) {
+    switch (self.playerVC.moviePlayer.playbackState) {
         case MPMoviePlaybackStatePlaying:
             NSLog(@"正在播放");
             break;
@@ -80,12 +90,21 @@
 {
     NSLog(@"视频播放完毕");
 }
+
+- (void)loadStateDidChangeAction
+{
+    
+    if (self.playerVC.moviePlayer.loadState == MPMovieLoadStateUnknown) {
+        NSLog(@"播放下个视频");
+    }
+    
+}
+
+
 //移除通知
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    
-    
 }
 
 
