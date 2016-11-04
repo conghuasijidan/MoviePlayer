@@ -23,7 +23,7 @@
 
 
 - (IBAction)pauseAction:(id)sender {
-    [self.player pause];
+    [_player pause];
 }
 
 - (IBAction)playMovieAction:(id)sender {
@@ -34,6 +34,8 @@
     //注意此时self.player 一定要释放，不然再次播放无法开启
     self.player = nil;
     [self.layer removeFromSuperlayer];
+    //注意释放内存
+    self.layer = nil;
 }
 //懒加载
 - (AVPlayer *)player
@@ -49,21 +51,15 @@
         AVAsset *asset = [AVAsset assetWithURL:url];
         
         AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:asset];
-        
         _player = [[AVPlayer alloc] initWithPlayerItem:item];
-        
         //注意点：此方法不能使用构造方法，不然不会显示，只会有声音
         AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer:_player];
-        
         [self.view.layer addSublayer:playerLayer];
         
         playerLayer.frame = [UIScreen mainScreen].bounds;
         self.layer = playerLayer;
-
     }
     
     return _player;
-    
-    
 }
 @end
